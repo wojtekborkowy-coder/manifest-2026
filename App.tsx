@@ -4,15 +4,9 @@ import { CLASS_NAME, SCHOOL_NAME, YEAR, WISH_CATEGORIES, TEACHER_NAME } from './
 // Import bezpośredni (pliki luzem w głównym folderze)
 import SystemActivation from './SystemActivation';
 
-// !!! WAŻNE: Upewnij się, że plik szampan.png jest w tym samym folderze co App.tsx (src)
-// Jeśli jest w głównym folderze projektu (root), przenieś go do src lub użyj ścieżki absolutnej '/szampan.png'
-// Przyjmuję, że plik jest dostępny jako statyczny zasób w buildzie.
-// Bezpieczniej w Vite jest użyć importu, jeśli plik jest w src:
-// import champagneImg from './szampan.png'; 
-// Ale jeśli nie chcesz importować, użyj po prostu '/szampan.png' i licz, że serwer go poda.
-// W poniższym kodzie używam ścieżki relatywnej do roota serwera.
-
-const CHAMPAGNE_IMG_URL = "/szampan.png"; // Zakładamy, że plik jest w root (dla Vite to public) lub zaimportowany.
+// !!! POPRAWKA DLA STRUKTURY PŁASKIEJ (wszystko w jednym folderze)
+// Skoro App.tsx i szampan.png są obok siebie, ten import jest poprawny.
+import champagneImg from './szampan.png';
 
 // --- KOMPONENT FAJERWERKÓW ---
 const Fireworks: React.FC = () => {
@@ -131,16 +125,20 @@ const ChampagneClink: React.FC = () => {
           .spark { animation: spark-flash 3s infinite ease-in-out; }
         `}</style>
         
-        {/* Odwołanie bezpośrednie do pliku w root */}
         <img 
-            src={CHAMPAGNE_IMG_URL}
+            src={champagneImg}
             alt="Toast noworoczny" 
             className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
             onError={(e) => {
-                // Fallback gdyby plik nie został znaleziony
+                // Gdyby import jednak nie zadziałał (co mało prawdopodobne), pokażemy błąd
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.parentElement!.classList.add('flex', 'items-center', 'justify-center');
-                e.currentTarget.parentElement!.innerHTML = '<span class="text-3xl">🥂</span>'; 
+                e.currentTarget.parentElement!.innerHTML = `
+                  <div class="text-center p-4">
+                    <span class="text-4xl">❌</span>
+                    <p class="text-xs text-red-500 mt-2 font-mono">Błąd ładowania pliku szampan.png</p>
+                  </div>
+                `; 
             }}
         />
         

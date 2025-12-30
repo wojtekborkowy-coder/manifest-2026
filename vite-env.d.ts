@@ -1,8 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_GEMINI_API_KEY: string;
-  // dodaj inne zmienne środowiskowe tutaj, jeśli są potrzebne
+  readonly VITE_GEMINI_API_KEY?: string;
 }
 
 interface ImportMeta {

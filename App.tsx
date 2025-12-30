@@ -1,9 +1,180 @@
-
 import React, { useState, useEffect } from 'react';
-import { AppStep } from './types';
-import { CLASS_NAME, SCHOOL_NAME, YEAR, WISH_CATEGORIES, TEACHER_NAME } from './constants';
-import SystemActivation from './components/SystemActivation';
-import { generatePersonalizedPoem } from './geminiService';
+
+// --- TYPY I INTERFEJSY ---
+export enum AppStep {
+  INTRO = 'INTRO',
+  WELCOME = 'WELCOME',
+  ACTIVATE = 'ACTIVATE',
+  WISHES = 'WISHES'
+}
+
+export interface WishCategory {
+  title: string;
+  icon: string;
+  color: string;
+  message: string;
+}
+
+// --- KONFIGURACJA I DANE ---
+export const CLASS_NAME = "4 Technikum Ochrony Środowiska";
+export const SCHOOL_NAME = "ZS nr 1 w Tychach";
+export const YEAR = "2026";
+export const TEACHER_NAME = "Wojciech Borkowy";
+
+export const WISH_CATEGORIES: WishCategory[] = [
+  {
+    title: "Zdrowie i Odporność",
+    icon: "🧬",
+    color: "bg-emerald-600",
+    message: "Na kolejny rok życzę Wam, aby zdrowie było solidną bazą. To ono pozwala utrzymać tempo w realizacji planów i codziennych wyzwań zawodowych."
+  },
+  {
+    title: "Rodzina i Relacje",
+    icon: "🏠",
+    color: "bg-emerald-700",
+    message: "Życzę Wam stabilnych fundamentów w życiu prywatnym. Niech wsparcie bliskich daje Wam spokój potrzebny do podejmowania mądrych decyzji."
+  },
+  {
+    title: "Wiara i Nadzieja",
+    icon: "✨",
+    color: "bg-zinc-700",
+    message: "Nigdy nie traćcie wiary we własne kompetencje. Niech nadzieja na dobre wyniki, wsparta rzetelną pracą, prowadzi Was prosto do celu."
+  },
+  {
+    title: "Energia Działania",
+    icon: "💨",
+    color: "bg-emerald-500",
+    message: "Życzę Wam, aby energia do pracy, niczym moc sprawnych turbin wiatrowych, pozwalała Wam skutecznie przetwarzać plany na konkretne efekty."
+  }
+];
+
+// --- LOGIKA AI (Lekki klient API) ---
+async function generatePersonalizedPoem() {
+  // Tekst zapasowy (fallback) używany gdy API nie odpowiada lub brak klucza
+  const FALLBACK_POEM = "Na kolejny rok życzę Wam aby,\nwasza wiedza i kompetencje stały się napędem,\nktóry jak sprawna turbina, pozwoli Wam realizować każdy ambitny plan.\nNiech zdrowie i wsparcie najbliższych będą stabilnym fundamentem,\na rok 2026 przyniesie konkretne sukcesy, z których będziecie dumni.";
+
+  try {
+    let apiKey = "";
+    try {
+      // @ts-ignore - ignorujemy błędy typowania dla bezpieczeństwa w różnych środowiskach
+      if (typeof import.meta !== 'undefined' && import.meta.env) {
+        apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+      }
+    } catch (e) {
+      console.warn("Info: Nie można odczytać zmiennych środowiskowych (to normalne w niektórych podglądach).");
+    }
+    
+    // POPRAWKA: Zamiast rzucać błąd (throw Error), który straszy w konsoli,
+    // po prostu logujemy informację i zwracamy tekst domyślny.
+    if (!apiKey) {
+        console.log("Tryb demonstracyjny: Brak klucza API. Używam przygotowanego tekstu życzeń.");
+        return FALLBACK_POEM;
+    }
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            role: "user",
+            parts: [{
+              text: "Napisz krótkie (4-6 wersów), profesjonalne i szczerze ciepłe życzenia noworoczne 2026 od wychowawcy Wojciecha Borkowego dla klasy 4 Technikum Ochrony Środowiska (Tychy ZS1).\n\n" +
+                    "WYTYCZNE DOTYCZĄCE TREŚCI:\n" +
+                    "1. UNIKAJ patosu typu 'ratowanie planety', 'dobro świata', 'wielka misja'. To brzmi nienaturalnie.\n" +
+                    "2. SKUP SIĘ NA: konkretnym fachu technika, rzetelnej wiedzy, stabilizacji życiowej i energii do działania.\n" +
+                    "3. Zacznij od: 'Na kolejny rok życzę Wam aby...'.\n" +
+                    "4. STYL: Nowoczesny, konkretny, męski, bez rymów częstochowskich. Dopuszczalny wiersz biały lub bardzo oszczędna forma.\n" +
+                    "5. METAFORA: Moc turbin wiatrowych jako czysta, techniczna siła do realizacji własnych planów, nie jako symbol ekologii, a jako symbol sprawności.\n" +
+                    "6. WARTOŚCI: Zdrowie, rodzina, miłość, nadzieja, wiara - podane w sposób nienachalny.\n" +
+                    "7. ZERO gwiazdek (*), zero markdownu, zero podpisów na końcu."
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.6,
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    return text
+      .replace(/\*/g, '')
+      .replace(/Z poważaniem.*/is, '')
+      .replace(/Wojciech Borkowy.*/is, '')
+      .replace(/Wychowawca.*/is, '')
+      .replace(/Twój wychowawca.*/is, '')
+      .trim();
+
+  } catch (error) {
+    // W przypadku błędu sieciowego (np. brak internetu), też używamy fallbacka
+    console.warn("Błąd połączenia z API (używam tekstu zapasowego):", error);
+    return FALLBACK_POEM;
+  }
+}
+
+// --- KOMPONENTY UI ---
+
+const SystemActivation: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState("Inicjalizacja połączenia...");
+
+  useEffect(() => {
+    const steps = [
+      { p: 10, t: "Weryfikacja uprawnień...", d: 500 },
+      { p: 30, t: "Ładowanie modułów...", d: 1500 },
+      { p: 60, t: "Synchronizacja z 4 TOŚ...", d: 2500 },
+      { p: 85, t: "Generowanie manifestu...", d: 3500 },
+      { p: 100, t: "Gotowe.", d: 4500 }
+    ];
+
+    steps.forEach((step) => {
+      setTimeout(() => {
+        setProgress(step.p);
+        setStatus(step.t);
+      }, step.d);
+    });
+
+    const finishTimer = setTimeout(() => {
+      onComplete();
+    }, 5000);
+
+    return () => clearTimeout(finishTimer);
+  }, [onComplete]);
+
+  return (
+    <div className="flex flex-col items-center justify-center space-y-8 z-10 w-full max-w-md animate-in fade-in duration-500">
+      <div className="relative w-24 h-24">
+         <div className="absolute inset-0 border-4 border-zinc-800 rounded-full"></div>
+         <div className="absolute inset-0 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+         <div className="absolute inset-0 flex items-center justify-center font-mono text-emerald-500 font-bold text-xl">
+           {progress}%
+         </div>
+      </div>
+      
+      <div className="space-y-2 text-center w-full">
+        <p className="text-emerald-400 font-mono text-sm uppercase tracking-widest animate-pulse">
+          {status}
+        </p>
+        <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const [step, setStep] = useState<AppStep>(AppStep.INTRO);
@@ -40,7 +211,7 @@ const App: React.FC = () => {
           </div>
           <button 
             onClick={() => setStep(AppStep.WELCOME)}
-            className="px-14 py-5 bg-zinc-900 border border-zinc-800 rounded-2xl text-[0.7rem] font-bold uppercase tracking-[0.4em] hover:bg-emerald-500 hover:text-black transition-all duration-500 shadow-2xl active:scale-95 text-white"
+            className="px-14 py-5 bg-zinc-900 border border-zinc-800 rounded-2xl text-[0.7rem] font-bold uppercase tracking-[0.4em] hover:bg-emerald-500 hover:text-black transition-all duration-500 shadow-2xl active:scale-95 text-white cursor-pointer"
           >
             Dostęp do Wiadomości
           </button>
@@ -67,7 +238,7 @@ const App: React.FC = () => {
           
           <button 
               onClick={() => setStep(AppStep.ACTIVATE)}
-              className="px-16 py-7 bg-emerald-600 text-white rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:bg-emerald-500 transition-all active:scale-95 shadow-xl"
+              className="px-16 py-7 bg-emerald-600 text-white rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:bg-emerald-500 transition-all active:scale-95 shadow-xl cursor-pointer"
           >
               Generuj Raport {YEAR}
           </button>
@@ -144,12 +315,12 @@ const App: React.FC = () => {
                 <span className="text-[0.65rem] font-black text-emerald-400 uppercase tracking-[0.6em] block">Status: Gotowość do działania</span>
                 <p className="text-zinc-200 text-2xl font-black uppercase italic tracking-tighter">Solidne fundamenty na rok {YEAR}</p>
               </div>
-              <button onClick={() => window.location.reload()} className="relative z-10 px-10 py-4 rounded-xl bg-zinc-950 text-[0.7rem] font-black text-zinc-500 hover:text-emerald-400 transition-all uppercase tracking-[0.3em] border border-zinc-800 active:scale-95">
+              <button onClick={() => window.location.reload()} className="relative z-10 px-10 py-4 rounded-xl bg-zinc-950 text-[0.7rem] font-black text-zinc-500 hover:text-emerald-400 transition-all uppercase tracking-[0.3em] border border-zinc-800 active:scale-95 cursor-pointer">
                 Odśwież 🔄
               </button>
           </div>
 
-          <footer className="text-center opacity-40 pt-12">
+          <footer className="text-center opacity-40 pt-12 pb-8">
             <p className="text-[0.6rem] font-black uppercase tracking-[1.5em] text-zinc-600 mb-3">{SCHOOL_NAME} • {CLASS_NAME}</p>
             <p className="text-[0.5rem] font-mono text-zinc-800 tracking-[0.4em] uppercase">Rzetelność • Wiedza • Przyszłość</p>
           </footer>

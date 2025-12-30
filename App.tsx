@@ -4,6 +4,16 @@ import { CLASS_NAME, SCHOOL_NAME, YEAR, WISH_CATEGORIES, TEACHER_NAME } from './
 // Import bezpośredni (pliki luzem w głównym folderze)
 import SystemActivation from './SystemActivation';
 
+// !!! WAŻNE: Upewnij się, że plik szampan.png jest w tym samym folderze co App.tsx (src)
+// Jeśli jest w głównym folderze projektu (root), przenieś go do src lub użyj ścieżki absolutnej '/szampan.png'
+// Przyjmuję, że plik jest dostępny jako statyczny zasób w buildzie.
+// Bezpieczniej w Vite jest użyć importu, jeśli plik jest w src:
+// import champagneImg from './szampan.png'; 
+// Ale jeśli nie chcesz importować, użyj po prostu '/szampan.png' i licz, że serwer go poda.
+// W poniższym kodzie używam ścieżki relatywnej do roota serwera.
+
+const CHAMPAGNE_IMG_URL = "/szampan.png"; // Zakładamy, że plik jest w root (dla Vite to public) lub zaimportowany.
+
 // --- KOMPONENT FAJERWERKÓW ---
 const Fireworks: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -106,13 +116,13 @@ const Fireworks: React.FC = () => {
   return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0 opacity-60" />;
 };
 
-// --- KOMPONENT SZAMPANA (Z OBRAZKIEM I NAPISEM) ---
+// --- KOMPONENT SZAMPANA ---
 const ChampagneClink: React.FC = () => {
   return (
     <div className="flex flex-col justify-center items-center py-10 animate-in fade-in zoom-in duration-1000 delay-500 w-full">
       
       {/* 1. OBRAZEK (Toast) */}
-      <div className="relative w-full max-w-md aspect-video rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 group mb-12">
+      <div className="relative w-full max-w-md aspect-video rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 group mb-12 bg-zinc-900">
         <style>{`
            @keyframes spark-flash {
             0%, 40%, 100% { opacity: 0; transform: scale(0.5) translate(-50%, -50%); }
@@ -121,19 +131,19 @@ const ChampagneClink: React.FC = () => {
           .spark { animation: spark-flash 3s infinite ease-in-out; }
         `}</style>
         
-        {/* Tu wstawisz swój plik szampan.png do folderu public */}
+        {/* Odwołanie bezpośrednie do pliku w root */}
         <img 
-            src="/szampan.png" 
+            src={CHAMPAGNE_IMG_URL}
             alt="Toast noworoczny" 
             className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-            // Fallback (gdyby nie było pliku) - ładny gradient
             onError={(e) => {
+                // Fallback gdyby plik nie został znaleziony
                 e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement!.style.background = 'linear-gradient(135deg, #18181b 0%, #27272a 100%)';
+                e.currentTarget.parentElement!.classList.add('flex', 'items-center', 'justify-center');
+                e.currentTarget.parentElement!.innerHTML = '<span class="text-3xl">🥂</span>'; 
             }}
         />
         
-        {/* Błysk na środku */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 spark">
            <svg width="80" height="80" viewBox="0 0 50 50" fill="none">
              <path d="M25 0 L 28 22 L 50 25 L 28 28 L 25 50 L 22 28 L 0 25 L 22 22 Z" fill="white" filter="drop-shadow(0 0 15px white)"/>
@@ -141,7 +151,7 @@ const ChampagneClink: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. MEGA STYLOWY NAPIS KOŃCOWY */}
+      {/* 2. NAPIS */}
       <div className="text-center px-4 w-full">
          <style>{`
             @keyframes shine {

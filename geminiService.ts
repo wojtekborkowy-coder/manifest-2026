@@ -1,10 +1,15 @@
-
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Informujemy TypeScript, że process.env będzie dostępny (Vite go wstrzyknie)
+declare var process: {
+  env: {
+    API_KEY: string;
+  };
+};
 
 export async function generatePersonalizedPoem() {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: "Napisz krótkie (4-6 wersów), profesjonalne i szczerze ciepłe życzenia noworoczne 2026 od wychowawcy Wojciecha Borkowego dla klasy 4 Technikum Ochrony Środowiska (Tychy ZS1).\n\n" +
@@ -21,7 +26,9 @@ export async function generatePersonalizedPoem() {
       }
     });
     
-    return response.text
+    const text = response.text || "";
+    
+    return text
       .replace(/\*/g, '')
       .replace(/Z poważaniem.*/is, '')
       .replace(/Wojciech Borkowy.*/is, '')
@@ -29,6 +36,7 @@ export async function generatePersonalizedPoem() {
       .replace(/Twój wychowawca.*/is, '')
       .trim();
   } catch (error) {
+    console.error("Gemini Error:", error);
     return "Na kolejny rok życzę Wam aby,\nwasza wiedza i kompetencje stały się napędem,\nktóry jak sprawna turbina, pozwoli Wam realizować każdy ambitny plan.\nNiech zdrowie i wsparcie najbliższych będą stabilnym fundamentem,\na rok 2026 przyniesie konkretne sukcesy, z których będziecie dumni.";
   }
 }

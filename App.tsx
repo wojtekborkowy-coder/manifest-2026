@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AppStep } from './types';
 import { CLASS_NAME, SCHOOL_NAME, YEAR, WISH_CATEGORIES, TEACHER_NAME } from './constants';
-// Upewnij się, że ścieżka do SystemActivation jest poprawna.
-// Jeśli jest w głównym folderze src, usuń "components/" ze ścieżki.
-// Zakładam, że skoro "rozpakowałeś" komponenty, to leżą one teraz w src.
+// Import bezpośredni (pliki luzem w głównym folderze)
 import SystemActivation from './SystemActivation';
-
 
 // --- FUNKCJA GENERUJĄCA ŻYCZENIA (ZINTEGROWANA) ---
 async function generatePersonalizedPoem() {
@@ -52,8 +49,8 @@ async function generatePersonalizedPoem() {
 
   } catch (error) {
     console.error("Gemini API Error / Fallback Mode:", error);
-    // Treść zapasowa - zawsze bezpieczna i dostępna
-    return "Na kolejny rok życzę Wam aby,\nwasza wiedza i kompetencje stały się napędem,\nktóry jak sprawna turbina, pozwoli Wam realizować każdy ambitny plan.\nNiech zdrowie i wsparcie najbliższych będą stabilnym fundamentem,\na rok 2026 przyniesie konkretne sukcesy, z których będziecie dumni.";
+    // Treść zapasowa - poprawiona literówka (usunięty przecinek po 'aby')
+    return "Na kolejny rok życzę Wam aby\nwasza wiedza i kompetencje stały się napędem,\nktóry jak sprawna turbina, pozwoli Wam realizować każdy ambitny plan.\nNiech zdrowie i wsparcie najbliższych będą stabilnym fundamentem,\na rok 2026 przyniesie konkretne sukcesy, z których będziecie dumni.";
   }
 }
 
@@ -80,6 +77,11 @@ const App: React.FC = () => {
 
       {step === AppStep.INTRO && (
         <div className="z-10 text-center animate-in fade-in zoom-in duration-1000">
+          {/* NOWY NAGŁÓWEK */}
+          <p className="text-emerald-500 font-bold text-xs uppercase tracking-widest mb-6">
+            Życzenia na nowy rok od wychowawcy Wojciecha Borkowego
+          </p>
+
           <p className="text-zinc-500 text-xs tracking-[0.5em] mb-4 uppercase">Zespół {CLASS_NAME}</p>
           <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter mb-2">
             Kierunek <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-700">{YEAR}</span>

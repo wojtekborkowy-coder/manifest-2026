@@ -9,7 +9,6 @@ async function generatePersonalizedPoem() {
   try {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
     
-    // Jeśli brak klucza, od razu rzucamy błąd, by przejść do treści zapasowej
     if (!apiKey) {
        console.warn("Brak klucza API (VITE_GEMINI_API_KEY). Używam trybu offline.");
        throw new Error("Missing API Key");
@@ -49,8 +48,8 @@ async function generatePersonalizedPoem() {
 
   } catch (error) {
     console.error("Gemini API Error / Fallback Mode:", error);
-    // Treść zapasowa - poprawiona literówka (usunięty przecinek po 'aby')
-    return "Na kolejny rok życzę Wam aby\nwasza wiedza i kompetencje stały się napędem,\nktóry jak sprawna turbina, pozwoli Wam realizować każdy ambitny plan.\nNiech zdrowie i wsparcie najbliższych będą stabilnym fundamentem,\na rok 2026 przyniesie konkretne sukcesy, z których będziecie dumni.";
+    // Treść zapasowa - PRZECINEK PRZYWRÓCONY
+    return "Na kolejny rok życzę Wam, aby\nwasza wiedza i kompetencje stały się napędem,\nktóry jak sprawna turbina, pozwoli Wam realizować każdy ambitny plan.\nNiech zdrowie i wsparcie najbliższych będą stabilnym fundamentem,\na rok 2026 przyniesie konkretne sukcesy, z których będziecie dumni.";
   }
 }
 
@@ -77,7 +76,8 @@ const App: React.FC = () => {
 
       {step === AppStep.INTRO && (
         <div className="z-10 text-center animate-in fade-in zoom-in duration-1000">
-          {/* NOWY NAGŁÓWEK */}
+          
+          {/* NOWE INTRO */}
           <p className="text-emerald-500 font-bold text-xs uppercase tracking-widest mb-6">
             Życzenia na nowy rok od wychowawcy Wojciecha Borkowego
           </p>
